@@ -1,0 +1,123 @@
+{
+  "id": "notion-knowledge-research",
+  "title": "Notion Knowledge Research",
+  "prompt": "Find the requested Notion pages by title, read their actual page content, and synthesize a cited answer using only statements supported by those pages.",
+  "instructions": "Search by the exact page-title terms first. For every selected result, call getPageOrBlockChildren with its returned parentId, markdown true, and dynamic {} to retrieve actual content; search snippets are not the source text. If a page is missing or content is empty, say so. Do not write pages, add comments, or assume a policy beyond the retrieved text.",
+  "fixture_summary": "Synthetic Notion search finds an escalation runbook and a service ownership page. Full block reads identify the first response steps and the owner of the escalation queue.",
+  "inputs": {
+    "title": "On-call escalation playbook",
+    "limit": 5
+  },
+  "steps": [
+    {
+      "id": "find_escalation_pages",
+      "alias": "knowledge",
+      "integration": "notion",
+      "action": "find_page",
+      "tool": "knowledge__find_page",
+      "arguments": {
+        "title": "On-call escalation playbook",
+        "exact_match": false,
+        "limit": 5
+      },
+      "records": [
+        {
+          "id": "notion-page-301",
+          "app": "Notion",
+          "title": "On-call escalation playbook",
+          "detail": "Synthetic title-search result. Open the page to read its actual blocks.",
+          "url": "https://example.com/records/notion-page-301",
+          "parent_id": "notion-page-301",
+          "source_kind": "runbook"
+        },
+        {
+          "id": "notion-page-302",
+          "app": "Notion",
+          "title": "Escalation ownership and service map",
+          "detail": "Synthetic title-search result. Open the page to read its actual blocks.",
+          "url": "https://example.com/records/notion-page-302",
+          "parent_id": "notion-page-302",
+          "source_kind": "ownership"
+        }
+      ]
+    },
+    {
+      "id": "read_oncall_runbook",
+      "alias": "knowledge",
+      "integration": "notion",
+      "action": "getPageOrBlockChildren",
+      "tool": "knowledge__getPageOrBlockChildren",
+      "arguments": {
+        "parentId": "notion-page-301",
+        "markdown": true,
+        "dynamic": {}
+      },
+      "records": [
+        {
+          "id": "notion-page-301",
+          "app": "Notion",
+          "title": "On-call escalation playbook",
+          "detail": "Synthetic page content: acknowledge a production alert, record the affected service and start time, then notify the named on-call owner. Escalate to the incident lead if customer impact is suspected. This fixture does not define a response-time SLA.",
+          "url": "https://example.com/records/notion-page-301",
+          "parent_id": "notion-page-301",
+          "source_kind": "runbook",
+          "content_read": true,
+          "contains_sla": false
+        }
+      ]
+    },
+    {
+      "id": "read_service_map",
+      "alias": "knowledge",
+      "integration": "notion",
+      "action": "getPageOrBlockChildren",
+      "tool": "knowledge__getPageOrBlockChildren",
+      "arguments": {
+        "parentId": "notion-page-302",
+        "markdown": true,
+        "dynamic": {}
+      },
+      "records": [
+        {
+          "id": "notion-page-302",
+          "app": "Notion",
+          "title": "Escalation ownership and service map",
+          "detail": "Synthetic page content: payments API primary owner is the platform rotation; backup is the reliability rotation. Notify the incident lead for cross-service impact.",
+          "url": "https://example.com/records/notion-page-302",
+          "parent_id": "notion-page-302",
+          "source_kind": "ownership",
+          "content_read": true,
+          "owner_listed": true
+        }
+      ]
+    }
+  ],
+  "metrics": [
+    {
+      "name": "pages_with_content_read",
+      "op": "count",
+      "where": {
+        "content_read": true
+      }
+    },
+    {
+      "name": "pages_listing_an_owner",
+      "op": "count",
+      "where": {
+        "owner_listed": true
+      }
+    },
+    {
+      "name": "pages_claiming_an_sla",
+      "op": "count",
+      "where": {
+        "contains_sla": true
+      }
+    }
+  ],
+  "expected_metrics": {
+    "pages_with_content_read": 2,
+    "pages_listing_an_owner": 1,
+    "pages_claiming_an_sla": 0
+  }
+}
